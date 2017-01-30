@@ -3,40 +3,79 @@
 <html>
   <head>
     <title>Geolocation Sound Player</title>
-
-    // Geolocation script
-    <script type="text/javascript">
-
-      var x = document.getElementById("demo");
-
-      function TestGeo() {
-        if (navigator.geolocation) {
-            navigator.geolocation.watchPosition( TestMap, error, {maximumAge: 1000, timeout: 10000, enableHighAccuracy: true} );
-        }
-        else {
-            x.innerHTML = "Geolocation is not supported by this browser."
-        }
-      }
-
-      function TestMap(position) {
-      	var latitude = position.coords.latitude;
-      	var longitude = position.coords.longitude;
-      	 x.innerHTML = "Latitude: " + position.coords.latitude +
-      	    "<br>Longitude: " + position.coords.longitude +
-      	    "<br>Accuracy: " + position.coords.accuracy;
-      }
-
-      function error() {
-      		x.innerHTML = "Cannot locate user."
-      }
-    </script>
   </head>
+
   <body onload ="TestGeo();">
 
     <h1>Geolocation Sound Player</h1>
 
-    // For geolocation
-    <p id="demo"></p>
+    <p id="coordinates"></p>
+    <p id="state"></p>
 
+    <script type="text/javascript">
+
+    <!-- Geolocation -->
+    var x = document.getElementById("coordinates");
+    var latTrue = false;
+    var longTrue = false;
+
+    function TestGeo() {
+      if (navigator.geolocation) {
+          navigator.geolocation.watchPosition( TestMap, error, {maximumAge: 1000, timeout: 10000, enableHighAccuracy: true} );
+      }
+      else {
+          x.innerHTML = "Geolocation is not supported by this browser."
+      }
+    }
+
+    function TestMap(position) {
+      var latitude = position.coords.latitude;
+      var longitude = position.coords.longitude;
+       x.innerHTML = "Latitude: " + position.coords.latitude +
+          "<br>Longitude: " + position.coords.longitude +
+          "<br>Accuracy: " + position.coords.accuracy;
+
+      if (latitude >= 40.5) {
+        latTrue = true;
+      }
+      if (longitude >= -90) {
+        longTrue = true;
+      }
+    }
+
+    function error() {
+        x.innerHTML = "Cannot locate user."
+    }
+
+
+    <!-- Audio -->
+    var y = document.getElementById("state");
+
+    var context = new AudioContext(); // Create the audio context
+    var request = new XMLHttpRequest(); // Get the sound
+
+    request.open('GET', 'test.mp3', true);
+    request.responseType = 'arraybuffer';
+
+    request.onload = function() {
+      var undecodedAudio = request.response;
+
+      context.decodeAudioData(undecodedAudio, function(buffer){
+        //Create the AudioBufferSourceNode
+        var sourceBuffer = context.createBufferSource();
+
+        //Tell the AudioBufferSourceNode to use this AudioBuffer
+        sourceBuffer.buffer = buffer;
+        sourceBuffer.connect(context.destination);
+        sourceBuffer.start(context.currentTime);
+      });
+    };
+
+    if ((longTrue === true) && (latTrue === true)) {
+      request.send();
+
+    }
+    y.innerHTML = "Lat: " + latTrue + "<br>Long: " + longTrue;
+    </script>
   </body>
 </html>
